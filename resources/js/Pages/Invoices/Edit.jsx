@@ -1,3 +1,4 @@
+import CurrencyInput from '@/Components/CurrencyInput';
 import { useApp } from '@/Contexts/AppContext';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
@@ -342,13 +343,11 @@ export default function EditInvoice({ invoice, clients }) {
 
                                             {/* Unit Price */}
                                             <td className="py-2 px-2">
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    step="1000"
+                                                <CurrencyInput
                                                     value={item.unit_price}
-                                                    onChange={(e) => handleItemChange(index, 'unit_price', e.target.value)}
+                                                    onChange={(val) => handleItemChange(index, 'unit_price', val)}
                                                     className="w-full text-xs font-mono text-right rounded-md border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-100 focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+                                                    placeholder="0"
                                                     required
                                                 />
                                             </td>
@@ -507,13 +506,11 @@ export default function EditInvoice({ invoice, clients }) {
                                                     Cicilan {inst.installment_number}/{inst.total_installments}
                                                 </td>
                                                 <td className="py-2 px-3">
-                                                    <input
-                                                        type="number"
-                                                        min="0"
-                                                        step="1000"
+                                                    <CurrencyInput
                                                         value={inst.amount}
-                                                        onChange={(e) => handleInstallmentChange(idx, 'amount', parseFloat(e.target.value) || 0)}
+                                                        onChange={(val) => handleInstallmentChange(idx, 'amount', val)}
                                                         className="w-full text-xs font-mono font-medium rounded-md border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 focus:border-zinc-900 dark:focus:border-zinc-100 focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100"
+                                                        placeholder="0"
                                                         required
                                                     />
                                                 </td>
