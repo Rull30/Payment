@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 
 const translations = {
     id: {
@@ -478,7 +479,52 @@ export function AppProvider({ children }) {
     }, [locale]);
 
     const toggleTheme = () => {
-        setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+        const nextTheme = theme === 'dark' ? 'light' : 'dark';
+
+        // Fallback for browsers without View Transitions API or if user prefers reduced motion
+        if (
+            typeof document === 'undefined' ||
+            !document.startViewTransition ||
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ) {
+            setTheme(nextTheme);
+            return;
+        }
+
+        const transition = document.startViewTransition(() => {
+            flushSync(() => {
+                setTheme(nextTheme);
+                if (nextTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                localStorage.setItem('theme', nextTheme);
+            });
+        });
+
+        transition.ready
+            .then(() => {
+                // Wave originating from top-left (0, 0) to bottom-right corner
+                const endRadius = Math.ceil(
+                    Math.hypot(window.innerWidth, window.innerHeight)
+                ) + 20;
+
+                document.documentElement.animate(
+                    {
+                        clipPath: [
+                            'circle(0px at 0 0)',
+                            `circle(${endRadius}px at 0 0)`,
+                        ],
+                    },
+                    {
+                        duration: 550,
+                        easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+                        pseudoElement: '::view-transition-new(root)',
+                    }
+                );
+            })
+            .catch(() => {});
     };
 
     const toggleLocale = () => {
