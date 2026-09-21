@@ -12,7 +12,7 @@ import {
 import { useState } from 'react';
 
 export default function ClientsIndex({ clients, filters }) {
-    const { t } = useApp();
+    const { t, confirm, toast } = useApp();
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState(null);
@@ -62,9 +62,17 @@ export default function ClientsIndex({ clients, filters }) {
         }
     };
 
-    const handleDelete = (client) => {
-        if (confirm(t('clients.modal.deleteConfirm', { name: client.name }))) {
-            router.delete(route('clients.destroy', client.id));
+    const handleDelete = async (client) => {
+        const ok = await confirm({
+            title: t('clients.modal.deleteConfirmTitle', 'Hapus Klien'),
+            message: t('clients.modal.deleteConfirm', { name: client.name }),
+            confirmText: t('common.delete', 'Hapus'),
+            variant: 'danger',
+        });
+        if (ok) {
+            router.delete(route('clients.destroy', client.id), {
+                onSuccess: () => toast.success(`Klien "${client.name}" berhasil dihapus`),
+            });
         }
     };
 

@@ -20,7 +20,7 @@ import {
 import { useState } from 'react';
 
 export default function Dashboard({ invoices, upcoming_reminders = [], filters, metrics, business }) {
-    const { t } = useApp();
+    const { t, confirm, toast } = useApp();
     const [searchTerm, setSearchTerm] = useState(filters.search || '');
     const [selectedStatus, setSelectedStatus] = useState(filters.status || 'all');
     const [activeInvoiceForWa, setActiveInvoiceForWa] = useState(null);
@@ -45,19 +45,37 @@ export default function Dashboard({ invoices, upcoming_reminders = [], filters, 
         );
     };
 
-    const handleMarkAsPaid = (invoice) => {
-        if (confirm(t('dashboard.actions.markPaidConfirm', { number: invoice.invoice_number }))) {
-            router.patch(route('invoices.status', invoice.id), { status: 'paid' });
+    const handleMarkAsPaid = async (invoice) => {
+        const ok = await confirm({
+            title: t('dashboard.actions.markPaid'),
+            message: t('dashboard.actions.markPaidConfirm', { number: invoice.invoice_number }),
+            confirmText: t('dashboard.actions.markPaid'),
+            variant: 'primary',
+        });
+        if (ok) {
+            router.patch(route('invoices.status', invoice.id), { status: 'paid' }, {
+                onSuccess: () => toast.success(`Invoice ${invoice.invoice_number} berhasil ditandai lunas`),
+            });
         }
     };
 
     const handleMarkInstallmentPaid = (installment) => {
-        router.patch(route('installments.status', installment.id), { status: 'paid' });
+        router.patch(route('installments.status', installment.id), { status: 'paid' }, {
+            onSuccess: () => toast.success(`Cicilan #${installment.installment_number} berhasil ditandai lunas`),
+        });
     };
 
-    const handleDelete = (invoice) => {
-        if (confirm(t('dashboard.actions.deleteConfirm', { number: invoice.invoice_number }))) {
-            router.delete(route('invoices.destroy', invoice.id));
+    const handleDelete = async (invoice) => {
+        const ok = await confirm({
+            title: t('dashboard.actions.delete'),
+            message: t('dashboard.actions.deleteConfirm', { number: invoice.invoice_number }),
+            confirmText: t('dashboard.actions.delete'),
+            variant: 'danger',
+        });
+        if (ok) {
+            router.delete(route('invoices.destroy', invoice.id), {
+                onSuccess: () => toast.success(`Invoice ${invoice.invoice_number} berhasil dihapus`),
+            });
         }
     };
 

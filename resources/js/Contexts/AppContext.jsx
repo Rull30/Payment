@@ -1,11 +1,24 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
+import { router } from '@inertiajs/react';
+import AlertModal from '@/Components/AlertModal';
+import ToastContainer from '@/Components/ToastContainer';
 
 const translations = {
     id: {
         brand: {
             name: 'RemindPay',
             tagline: 'Invoice & Pengingat Pembayaran WhatsApp',
+        },
+        common: {
+            cancel: 'Batal',
+            confirm: 'Konfirmasi',
+            delete: 'Hapus',
+            markPaid: 'Tandai Lunas',
+            success: 'Berhasil',
+            error: 'Terjadi Kesalahan',
+            notice: 'Pemberitahuan',
+            warning: 'Peringatan',
         },
         nav: {
             invoices: 'Invoice',
@@ -131,6 +144,7 @@ const translations = {
                 cancel: 'Batal',
                 save: 'Simpan Klien',
                 update: 'Perbarui Klien',
+                deleteConfirmTitle: 'Hapus Klien',
                 deleteConfirm: 'Hapus klien "{name}"? Seluruh invoice terkait klien ini akan ikut terhapus.',
             },
         },
@@ -221,6 +235,16 @@ const translations = {
         brand: {
             name: 'RemindPay',
             tagline: 'Invoice & WhatsApp Payment Reminder',
+        },
+        common: {
+            cancel: 'Cancel',
+            confirm: 'Confirm',
+            delete: 'Delete',
+            markPaid: 'Mark Paid',
+            success: 'Success',
+            error: 'Error',
+            notice: 'Notice',
+            warning: 'Warning',
         },
         nav: {
             invoices: 'Invoices',
@@ -346,6 +370,7 @@ const translations = {
                 cancel: 'Cancel',
                 save: 'Save Client',
                 update: 'Update Client',
+                deleteConfirmTitle: 'Delete Client',
                 deleteConfirm: 'Delete client "{name}"? Existing invoices for this client will also be removed.',
             },
         },
@@ -568,6 +593,105 @@ export function AppProvider({ children }) {
         return val;
     };
 
+    // Confirmation Modal state
+    const [modalConfig, setModalConfig] = useState({
+        isOpen: false,
+        title: 'Konfirmasi',
+        message: '',
+        confirmText: 'Konfirmasi',
+        cancelText: 'Batal',
+        variant: 'primary',
+        resolve: null,
+    });
+
+    const confirm = ({
+        title = locale === 'en' ? 'Confirmation' : 'Konfirmasi',
+        message = '',
+        confirmText,
+        cancelText,
+        variant = 'primary',
+    }) => {
+        return new Promise((resolve) => {
+            setModalConfig({
+                isOpen: true,
+                title,
+                message,
+                confirmText: confirmText || (locale === 'en' ? 'Confirm' : 'Konfirmasi'),
+                cancelText: cancelText || (locale === 'en' ? 'Cancel' : 'Batal'),
+                variant,
+                resolve,
+            });
+        });
+    };
+
+    const handleModalClose = () => {
+        if (modalConfig.resolve) {
+            modalConfig.resolve(false);
+        }
+        setModalConfig((prev) => ({ ...prev, isOpen: false, resolve: null }));
+    };
+
+    const handleModalConfirm = () => {
+        if (modalConfig.resolve) {
+            modalConfig.resolve(true);
+        }
+        setModalConfig((prev) => ({ ...prev, isOpen: false, resolve: null }));
+    };
+
+    // Toasts state
+    const [toasts, setToasts] = useState([]);
+
+    const addToast = ({ type = 'info', message, title, duration = 4000 }) => {
+        if (!message) return;
+        const id = Math.random().toString(36).substring(2, 9);
+        const newToast = { id, type, message, title };
+        setToasts((prev) => [...prev, newToast]);
+
+        if (duration > 0) {
+            setTimeout(() => {
+                setToasts((prev) => prev.filter((t) => t.id !== id));
+            }, duration);
+        }
+        return id;
+    };
+
+    const removeToast = (id) => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+    };
+
+    const toast = {
+        success: (message, title) => addToast({ type: 'success', message, title }),
+        error: (message, title) => addToast({ type: 'error', message, title }),
+        warning: (message, title) => addToast({ type: 'warning', message, title }),
+        info: (message, title) => addToast({ type: 'info', message, title }),
+        dismiss: removeToast,
+    };
+
+    // Global Inertia flash listener
+    useEffect(() => {
+        const removeSuccessListener = router.on('success', (event) => {
+            const flash = event.detail.page.props?.flash;
+            if (flash?.message) {
+                toast.success(flash.message);
+            }
+            if (flash?.error) {
+                toast.error(flash.error);
+            }
+        });
+
+        const removeErrorListener = router.on('error', (errors) => {
+            const errorMessages = Object.values(errors);
+            if (errorMessages.length > 0) {
+                toast.error(errorMessages[0]);
+            }
+        });
+
+        return () => {
+            removeSuccessListener();
+            removeErrorListener();
+        };
+    }, []);
+
     return (
         <AppContext.Provider
             value={{
@@ -577,9 +701,22 @@ export function AppProvider({ children }) {
                 setLocale,
                 toggleLocale,
                 t,
+                confirm,
+                toast,
             }}
         >
             {children}
+            <AlertModal
+                isOpen={modalConfig.isOpen}
+                title={modalConfig.title}
+                message={modalConfig.message}
+                confirmText={modalConfig.confirmText}
+                cancelText={modalConfig.cancelText}
+                variant={modalConfig.variant}
+                onConfirm={handleModalConfirm}
+                onClose={handleModalClose}
+            />
+            <ToastContainer toasts={toasts} onDismiss={removeToast} />
         </AppContext.Provider>
     );
 }
@@ -590,4 +727,9 @@ export function useApp() {
         throw new Error('useApp must be used within an AppProvider');
     }
     return context;
+}
+
+export function useAlert() {
+    const { confirm, toast } = useApp();
+    return { confirm, toast };
 }

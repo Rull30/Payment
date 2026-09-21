@@ -269,15 +269,6 @@ export default function AuthenticatedLayout({ header, children }) {
                 )}
             </nav>
 
-            {/* Flash Message Banner */}
-            {flash?.message && (
-                <div className="bg-emerald-50 dark:bg-emerald-950/40 border-b border-emerald-200/80 dark:border-emerald-900/60 px-4 py-2.5 text-xs text-emerald-800 dark:text-emerald-200">
-                    <div className="max-w-7xl mx-auto flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" strokeWidth={1.75} />
-                        <span>{flash.message}</span>
-                    </div>
-                </div>
-            )}
 
             {/* Page Header */}
             {header && (
