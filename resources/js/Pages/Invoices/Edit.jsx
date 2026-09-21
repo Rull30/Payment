@@ -258,27 +258,29 @@ export default function EditInvoice({ invoice, clients }) {
 
                     {/* Status selection */}
                     <div className="pt-2">
-                        <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                        <label className="block text-xs font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
                             {t('invoiceForm.currentStatus')}
                         </label>
-                        <div className="flex items-center gap-4">
+                        <div className="inline-flex rounded-md border border-zinc-200 dark:border-zinc-700 p-0.5 bg-zinc-100 dark:bg-zinc-800">
                             {[
-                                { key: 'draft', label: t('dashboard.tabs.draft') },
-                                { key: 'sent', label: t('dashboard.tabs.sent') },
-                                { key: 'paid', label: t('dashboard.tabs.paid') },
-                                { key: 'overdue', label: t('dashboard.tabs.overdue') },
+                                { key: 'draft', label: t('dashboard.tabs.draft'), dot: 'bg-zinc-400 dark:bg-zinc-500' },
+                                { key: 'sent', label: t('dashboard.tabs.sent'), dot: 'bg-blue-500' },
+                                { key: 'paid', label: t('dashboard.tabs.paid'), dot: 'bg-emerald-500' },
+                                { key: 'overdue', label: t('dashboard.tabs.overdue'), dot: 'bg-rose-500' },
                             ].map((st) => (
-                                <label key={st.key} className="inline-flex items-center gap-1.5 cursor-pointer text-xs text-zinc-700 dark:text-zinc-300">
-                                    <input
-                                        type="radio"
-                                        name="status"
-                                        value={st.key}
-                                        checked={data.status === st.key}
-                                        onChange={(e) => setData('status', e.target.value)}
-                                        className="text-zinc-900 dark:text-zinc-100 focus:ring-zinc-900 dark:focus:ring-zinc-100"
-                                    />
-                                    <span>{st.label}</span>
-                                </label>
+                                <button
+                                    key={st.key}
+                                    type="button"
+                                    onClick={() => setData('status', st.key)}
+                                    className={`inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded transition-colors ${
+                                        data.status === st.key
+                                            ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-xs font-semibold border border-zinc-200/80 dark:border-zinc-700'
+                                            : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 border border-transparent'
+                                    }`}
+                                >
+                                    <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
+                                    {st.label}
+                                </button>
                             ))}
                         </div>
                     </div>
